@@ -19,10 +19,10 @@
         <attribute name="backstageURL" type="string" use="required" private="true">
             Specifies the backstage URL to access the host.
         </attribute>
-        <attribute name="hostIP" type="string" use="required">
+        <attribute name="hostIP" type="string" use="required" private="true">
             Specifies the IP address of the host.
         </attribute>
-        <attribute name="eventType" type="string" use="required">
+        <attribute name="eventType" type="string" use="required" private="true">
             Specifies the type of monitoring event.
         </attribute>
         <attributeGroup name="slice" minOccurs="0" maxOccurs="unbounded">
