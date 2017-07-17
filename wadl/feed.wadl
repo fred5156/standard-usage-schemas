@@ -25,13 +25,11 @@
         <method href="#getFeed" rax:roles="cloudfeeds:service-admin cloudfeeds:service-observer"/>
     </resource_type>
 
-    <!-- This resource_type is for the mixed XML/JSON content (the envelope is in XML but
-         the atom:content element has type="application/json". It is here only to support
-         older feeds that attempted to use JSON before JSON was officially supported in
-         Cloud Feeds. It should *NOT* be used for newly created feeds. 
-         JSON format is automatically supported on all feeds via the setting of 
-         Content-Type header (on publish) and Accept header (on consumption) to 
-         application/vnd.rackspace.atom+json
+    <!-- This resource_type is for the old JSON format, implemented by Apache Abdera's
+         JSON Serialization: 
+             https://cwiki.apache.org/confluence/display/ABDERA/JSON+Serialization
+         This format was experimental and was only kept here for backwards compatibility
+         reason. It should *NOT* be used for new feeds.
     -->
     <resource_type id="AtomFeedAllowJson">
         <method href="#getFeedAllowJson" rax:roles="cloudfeeds:service-admin cloudfeeds:service-observer"/>
@@ -51,6 +49,14 @@
         </resource>
     </resource_type>
 
+    <!-- This resource_type is for the mixed XML/JSON content (the envelope is in XML but
+         the atom:content element has type="application/json". It is here only to support
+         older feeds that attempted to use JSON before JSON was officially supported in
+         Cloud Feeds. It should *NOT* be used for newly created feeds. 
+         JSON format is automatically supported on all feeds via the setting of 
+         Content-Type header (on publish) and Accept header (on consumption) to 
+         application/vnd.rackspace.atom+json
+    -->
     <resource_type id="JsonContentOnly">
         <wadl:doc title="JsonContentOnly" xmlns="http://docbooks.org/ns/docbook">
             <para>
@@ -209,6 +215,14 @@
         &postPutFaults;
     </method>
 
+    <!-- This resource_type is for the mixed XML/JSON content (the envelope is in XML but
+         the atom:content element has type="application/json". It is here only to support
+         older feeds that attempted to use JSON before JSON was officially supported in
+         Cloud Feeds. It should *NOT* be used for newly created feeds. 
+         JSON format is automatically supported on all feeds via the setting of 
+         Content-Type header (on publish) and Accept header (on consumption) to 
+         application/vnd.rackspace.atom+json
+    -->
     <method id="addJsonContentOnly" name="POST">
         <wadl:doc xml:lang="EN" title="Add JSON Only Entry" xmlns="http://docbook.org/ns/docbook">
             <para role="shortdesc">The atom:content node must have type="application/json".  While the atom envelope can
