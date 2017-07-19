@@ -8,7 +8,7 @@
     <description>
         Lists all the events for ticket creation and updates.
     </description>
-    <attributeGroup name="queue" minOccurs="1" maxOccurs="1">
+    <attributeGroup name="queue" minOccurs="0" maxOccurs="1">
         <description>
             The queue or group this ticket belongs to
         </description>
