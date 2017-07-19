@@ -8,7 +8,7 @@
     <description>
         Queue View definition update event.
     </description>
-    <attribute name="number" type="int" use="required">
+    <attribute name="number" type="string" use="required">
         Queue Id/number at Source
     </attribute>
     <attribute name="sourceSystem" type="string" use="required" allowedValues="CORE ENCORE">
