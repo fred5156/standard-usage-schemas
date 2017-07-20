@@ -3,13 +3,13 @@
                serviceCode="Ticketing"
                version="1" 
                resourceTypes="QUEUE_VIEW"
-               type="UPDATE"
+               type="UPDATE DELETE"
                writeRole="cloudfeeds:ticketing-publisher">
     <description>
         Queue View definition update event.
     </description>
-    <attribute name="number" type="int" use="required">
-        Queue Id/number at Source
+    <attribute name="number" type="string" use="required">
+        Queue number in source system. In Core this is a number, however in Encore the queue number follows this format ord-0068646
     </attribute>
     <attribute name="sourceSystem" type="string" use="required" allowedValues="CORE ENCORE">
         Source System
