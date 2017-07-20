@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This example has been generated using
+    'mvn -P generate-samples clean generate-sources -DproductSchema=sample_product_schemas/ticketing-ticket-event.xml -DfeedName=ticketing' call.
+    Some assumptions have been made when generating this and might not be correct.  Manual modification
+    might be required for the unit tests to pass.
+
+    The assumptions:
+
+      - If the productSchema requires a 'resourceId' attribute, its value is set to
+        '4a2b42f4-6c63-11e1-815b-7fcbcf67f549'.
+      - If the productSchema has <xpathAssertion> nodes, the assertions might not be satisfied
+        by the generated content.
+      - No optional nodes or attributes are generated.
+      - Does not process the 'withEventType' and 'withResource' attributes.
+-->
+<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://www.w3.org/2001/XMLSchema">
+   <atom:id>urn:uuid:e53d007a-fc23-11e1-975c-cfa6b29bb814</atom:id>
+   <atom:category term="rgn:DFW"/>
+   <atom:category term="dc:DFW1"/>
+   <atom:category term="rid:4a2b42f4-6c63-11e1-815b-7fcbcf67f549"/>
+   <atom:category term="ticketing.ticket.ticket.update"/>
+   <atom:category term="type:ticketing.ticket.ticket.update"/>
+   <atom:title>Ticketing</atom:title>
+   <atom:content type="application/xml">
+      <event xmlns="http://docs.rackspace.com/core/event"
+             xmlns:sample="http://docs.rackspace.com/event/ticketing/ticket"
+             id="e53d007a-fc23-11e1-975c-cfa6b29bb814"
+             version="2"
+             resourceId="4a2b42f4-6c63-11e1-815b-7fcbcf67f549"
+             eventTime="2013-03-15T11:51:11Z"
+             type="UPDATE"
+             dataCenter="DFW1"
+             region="DFW">
+         <sample:product serviceCode="Ticketing"
+                         version="1"
+                         resourceType="TICKET"
+                         difficultyLevel="LEVEL1"
+                         status="sampleString"
+                         ticketUpdateTime="2013-09-26T15:32:00-05:00">
+         </sample:product>
+      </event>
+   </atom:content>   
+   <atom:link href="https://ord.feeds.api.rackspacecloud.com/ticketing/events/entries/urn:uuid:e53d007a-fc23-11e1-975c-cfa6b29bb814"
+              rel="self"/>
+   <atom:updated>2013-03-01T19:42:35.507Z</atom:updated>
+   <atom:published>2013-03-01T19:42:35.507</atom:published>
+</atom:entry>
