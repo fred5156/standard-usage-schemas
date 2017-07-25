@@ -9,6 +9,7 @@ import net.sf.saxon.Controller
 import net.sf.saxon.lib.NamespaceConstant
 import org.boon.json.JsonParserFactory
 import org.junit.runner.RunWith
+import org.scalatest.AppendedClues
 import org.scalatest.Matchers._
 import org.scalatest.junit.JUnitRunner
 
@@ -19,7 +20,8 @@ import scala.util.parsing.json.JSON
   * Tests for the XSLT that transforms XML events to JSON events
   */
 @RunWith(classOf[JUnitRunner])
-class Xml2JsonSuite extends BaseUsageSuite {
+class Xml2JsonSuite extends BaseUsageSuite with AppendedClues {
+  import Xml2JsonSuite._
 
   // During the "initialize" phase, we copy this file from src/main/xsl to target/
   // directory. This xslt "xsl:includes" another xslt that's generated (nonStringAttrs.xsl)
@@ -275,6 +277,188 @@ class Xml2JsonSuite extends BaseUsageSuite {
     productObject("memory") shouldBe 32768 // memory should be numeric and 32768
   }
 
+  val jsonStringTests = List(
+    ("with quotation mark", s"a${XmlQuote}b", """a"b"""),
+    ("with two quotation marks", s"a${XmlQuote}b${XmlQuote}c", """a"b"c"""),
+    ("starting with quotation mark", s"${XmlQuote}b", """"b"""),
+    ("ending with quotation mark", s"a$XmlQuote", """a""""),
+    ("starting and ending with quotation marks", s"${XmlQuote}a$XmlQuote", """"a""""),
+    ("with only quotation mark", XmlQuote, "\""),
+    ("with only two quotation marks", s"$XmlQuote$XmlQuote", "\"\""),
+    ("with only three quotation marks", s"$XmlQuote$XmlQuote$XmlQuote", "\"\"\""),
+    ("with only four quotation marks", s"$XmlQuote$XmlQuote$XmlQuote$XmlQuote", "\"\"\"\""),
+    ("with backslash", s"a${XmlBackslash}b", """a\b"""),
+    ("with two backslashes", s"a${XmlBackslash}b${XmlBackslash}c", """a\b\c"""),
+    ("starting with backslash", s"${XmlBackslash}b", """\b"""),
+    ("ending with backslash", s"a$XmlBackslash", """a\"""),
+    ("starting and ending with backslashes", s"${XmlBackslash}a$XmlBackslash", """\a\"""),
+    ("with only backslash", XmlBackslash, """\"""),
+    ("with only two backslashes", s"$XmlBackslash$XmlBackslash", """\\"""),
+    ("with only three backslashes", s"$XmlBackslash$XmlBackslash$XmlBackslash", """\\\"""),
+    ("with only four backslashes", s"$XmlBackslash$XmlBackslash$XmlBackslash$XmlBackslash", """\\\\"""),
+    ("with quotation mark then backslash", s"a${XmlQuote}b${XmlBackslash}c", """a"b\c"""),
+    ("with backslash then quotation mark", s"a${XmlBackslash}b${XmlQuote}c", """a\b"c"""),
+    ("with quotation mark/backslash alt 1", s"$XmlQuote$XmlBackslash$XmlQuote", "\"\\\""),
+    ("with quotation mark/backslash alt 2", s"$XmlBackslash$XmlQuote$XmlBackslash", "\\\"\\"))
+
+  jsonStringTests.foreach { case (testCase, xmlElement, expectedJsonValue) =>
+    test(s"should transform element $testCase properly") {
+      val xml =
+        s"""<?xml version="1.0"?>
+           |<entry xmlns="http://www.w3.org/2005/Atom">
+           |  <title>$xmlElement</title>
+           |  <category term="DFW2"/>
+           |  <category term="6093728"/>
+           |  <category term="trove.instance.exists"/>
+           |  <content type="application/xml">
+           |    <event xmlns="http://docs.rackspace.com/core/event" xmlns:dbaas="http://docs.rackspace.com/usage/dbaas" dataCenter="DFW2"
+           |           startTime="2014-08-06T21:11:55Z"
+           |           endTime="2014-08-06T22:11:55Z"
+           |           environment="QA" id="170d03b4-9582-4e34-80fb-d01911ef6469" region="DFW" resourceId="88939024-bf82-49ec-a177-d7ca55d60c9d" resourceName="ba858553-30f4-4f69-a65d-6addc5eafef5" rootAction="trove.instance.exists"
+           |           tenantId="6093728" type="USAGE" version="1">
+           |      <dbaas:product dbVersion="1.0" memory="32768" resourceType="MARIADB" serviceCode="CloudDatabase" storage="0" version="2"/>
+           |    </event>
+           |  </content>
+           |</entry>
+          """.stripMargin
+
+      val jsonResult = transform(new StreamSource(new StringReader(xml)))
+      jsonResult should not be null withClue s". The XML could not be transformed:\n$xml"
+
+      val jsonParsed = JSON.parseFull(jsonResult)
+      jsonParsed shouldBe defined withClue s". The transform generated JSON could not be parsed:\n$jsonResult"
+      val jsonObjects = jsonParsed.get.asInstanceOf[Map[String, Any]]
+
+      jsonObjects should contain key "entry"
+      val entryObject = jsonObjects("entry").asInstanceOf[Map[String, Any]]
+
+      entryObject should contain key "title"
+      entryObject("title") shouldBe expectedJsonValue
+    }
+  }
+
+  jsonStringTests.foreach { case (testCase, xmlElement, expectedJsonValue) =>
+    test(s"should transform text element $testCase properly") {
+      val xml =
+        s"""<?xml version="1.0"?>
+           |<entry xmlns="http://www.w3.org/2005/Atom">
+           |  <title type="text">$xmlElement</title>
+           |  <category term="DFW2"/>
+           |  <category term="6093728"/>
+           |  <category term="trove.instance.exists"/>
+           |  <content type="application/xml">
+           |    <event xmlns="http://docs.rackspace.com/core/event" xmlns:dbaas="http://docs.rackspace.com/usage/dbaas" dataCenter="DFW2"
+           |           startTime="2014-08-06T21:11:55Z"
+           |           endTime="2014-08-06T22:11:55Z"
+           |           environment="QA" id="170d03b4-9582-4e34-80fb-d01911ef6469" region="DFW" resourceId="88939024-bf82-49ec-a177-d7ca55d60c9d" resourceName="ba858553-30f4-4f69-a65d-6addc5eafef5" rootAction="trove.instance.exists"
+           |           tenantId="6093728" type="USAGE" version="1">
+           |      <dbaas:product dbVersion="1.0" memory="32768" resourceType="MARIADB" serviceCode="CloudDatabase" storage="0" version="2"/>
+           |    </event>
+           |  </content>
+           |</entry>
+          """.stripMargin
+
+      val jsonResult = transform(new StreamSource(new StringReader(xml)))
+      jsonResult should not be null withClue s". The XML could not be transformed:\n$xml"
+
+      val jsonParsed = JSON.parseFull(jsonResult)
+      jsonParsed shouldBe defined withClue s". The transform generated JSON could not be parsed:\n$jsonResult"
+      val jsonObjects = jsonParsed.get.asInstanceOf[Map[String, Any]]
+
+      jsonObjects should contain key "entry"
+      val entryObject = jsonObjects("entry").asInstanceOf[Map[String, Any]]
+
+      entryObject should contain key "title"
+      val titleObject = entryObject("title").asInstanceOf[Map[String, Any]]
+
+      titleObject should contain key "@text"
+      titleObject("@text") shouldBe expectedJsonValue
+    }
+  }
+
+  jsonStringTests.foreach { case (testCase, xmlAttribute, expectedJsonValue) =>
+    test(s"should transform category with term attribute $testCase properly") {
+      val xml =
+        s"""<?xml version="1.0"?>
+           |<entry xmlns="http://www.w3.org/2005/Atom">
+           |  <title>trove.instance.exists</title>
+           |  <category term="DFW2"/>
+           |  <category term="$xmlAttribute"/>
+           |  <category term="trove.instance.exists"/>
+           |  <content type="application/xml">
+           |    <event xmlns="http://docs.rackspace.com/core/event" xmlns:dbaas="http://docs.rackspace.com/usage/dbaas" dataCenter="DFW2"
+           |           startTime="2014-08-06T21:11:55Z"
+           |           endTime="2014-08-06T22:11:55Z"
+           |           environment="QA" id="170d03b4-9582-4e34-80fb-d01911ef6469" region="DFW" resourceId="88939024-bf82-49ec-a177-d7ca55d60c9d" resourceName="ba858553-30f4-4f69-a65d-6addc5eafef5" rootAction="trove.instance.exists"
+           |           tenantId="6093728" type="USAGE" version="1">
+           |      <dbaas:product dbVersion="1.0" memory="32768" resourceType="MARIADB" serviceCode="CloudDatabase" storage="0" version="2"/>
+           |    </event>
+           |  </content>
+           |</entry>
+          """.stripMargin
+
+      val jsonResult = transform(new StreamSource(new StringReader(xml)))
+      jsonResult should not be null withClue s". The XML could not be transformed:\n$xml"
+
+      val jsonParsed = JSON.parseFull(jsonResult)
+      jsonParsed shouldBe defined withClue s". The transform generated JSON could not be parsed:\n$jsonResult"
+      val jsonObjects = jsonParsed.get.asInstanceOf[Map[String, Any]]
+
+      jsonObjects should contain key "entry"
+      val entryObject = jsonObjects("entry").asInstanceOf[Map[String, Any]]
+
+      entryObject should contain key "category"
+      val categoryObjects = entryObject("category").asInstanceOf[List[Map[String, Any]]]
+      categoryObjects.size should be >= 3
+      categoryObjects should contain (Map("term" -> expectedJsonValue))
+    }
+  }
+
+  jsonStringTests.foreach { case (testCase, xmlAttribute, expectedJsonValue) =>
+    test(s"should transform product attribute $testCase properly") {
+      val xml =
+        s"""<?xml version="1.0"?>
+           |<entry xmlns="http://www.w3.org/2005/Atom">
+           |  <title>trove.instance.exists</title>
+           |  <category term="DFW2"/>
+           |  <category term="6093728"/>
+           |  <category term="trove.instance.exists"/>
+           |  <content type="application/xml">
+           |    <event xmlns="http://docs.rackspace.com/core/event" xmlns:dbaas="http://docs.rackspace.com/usage/dbaas" dataCenter="DFW2"
+           |           startTime="2014-08-06T21:11:55Z"
+           |           endTime="2014-08-06T22:11:55Z"
+           |           environment="QA" id="170d03b4-9582-4e34-80fb-d01911ef6469" region="DFW" resourceId="88939024-bf82-49ec-a177-d7ca55d60c9d" resourceName="ba858553-30f4-4f69-a65d-6addc5eafef5" rootAction="trove.instance.exists"
+           |           tenantId="6093728" type="USAGE" version="1">
+           |      <dbaas:product dbVersion="1.0" memory="32768" resourceType="$xmlAttribute" serviceCode="CloudDatabase" storage="0" version="2"/>
+           |    </event>
+           |  </content>
+           |</entry>
+          """.stripMargin
+
+      val jsonResult = transform(new StreamSource(new StringReader(xml)))
+      jsonResult should not be null withClue s". The XML could not be transformed:\n$xml"
+
+      val jsonParsed = JSON.parseFull(jsonResult)
+      jsonParsed shouldBe defined withClue s". The transform generated JSON could not be parsed:\n$jsonResult"
+      val jsonObjects = jsonParsed.get.asInstanceOf[Map[String, Any]]
+
+      jsonObjects should contain key "entry"
+      val entryObject = jsonObjects("entry").asInstanceOf[Map[String, Any]]
+
+      entryObject should contain key "content"
+      val contentObject = entryObject("content").asInstanceOf[Map[String, Any]]
+
+      contentObject should contain key "event"
+      val eventObject = contentObject("event").asInstanceOf[Map[String, Any]]
+
+      eventObject should contain key "product"
+      val productObject = eventObject("product").asInstanceOf[Map[String, Any]]
+
+      productObject should contain key "resourceType"
+      productObject("resourceType") shouldBe expectedJsonValue
+    }
+  }
+
   test("should transform XML identity user access event into JSON properly") {
     val parser = new JsonParserFactory().createFastParser()
 
@@ -440,4 +624,9 @@ class Xml2JsonSuite extends BaseUsageSuite {
         .get("@type") == "http://purl.org/syndication/history/1.0")
     }
   })
+}
+
+object Xml2JsonSuite {
+  val XmlQuote = "&quot;"
+  val XmlBackslash = "\\"
 }
