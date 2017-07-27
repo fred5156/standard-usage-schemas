@@ -17,6 +17,10 @@
     <!-- this nonStringAttrs.xsl file is generated -->
     <xsl:include href="nonStringAttrs.xsl"/>
 
+    <xsl:template match="/">
+        <xsl:call-template name="main"/>
+    </xsl:template>
+
     <!-- The "main" template". This is the entry point, or in Saxon's term,
          the "initial template".
     -->
@@ -158,7 +162,10 @@
             
             <!-- handle nodes that have no child nodes -->
             <xsl:when test="count(./child::*) = 0">
-                <xsl:text>"</xsl:text><xsl:value-of select="local-name()"/>" : "<xsl:apply-templates select="."/><xsl:text>"</xsl:text>
+                <xsl:text>"</xsl:text><xsl:value-of select="local-name()"/>" :
+                <xsl:call-template name="json-string">
+                    <xsl:with-param name="in" select="."/>
+                </xsl:call-template>
 
                 <xsl:if test="cldfeeds:getSiblingCount(.) &gt; 0">, </xsl:if>
             </xsl:when>
@@ -227,7 +234,10 @@
         <xsl:apply-templates select="./*" mode="others"/>
         
         <xsl:if test="count(child::*) = 0 and text() and not(@*)">
-            <xsl:text>"</xsl:text><xsl:value-of select="local-name()"/>" : "<xsl:value-of select="text()"/><xsl:text>"</xsl:text>
+            <xsl:text>"</xsl:text><xsl:value-of select="local-name()"/>" :
+            <xsl:call-template name="json-string">
+                <xsl:with-param name="in" select="text()"/>
+            </xsl:call-template>
         </xsl:if>
         
         <!-- handles element that has both text child node and attributes -->
@@ -243,11 +253,13 @@
                     <xsl:value-of select="text()"/>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:text>"</xsl:text>
-                    <xsl:call-template name="removeBreaks">
-                        <xsl:with-param name="pText" select="text()"/>
+                    <xsl:call-template name="json-string">
+                        <xsl:with-param name="in">
+                            <xsl:call-template name="removeBreaks">
+                                <xsl:with-param name="pText" select="text()"/>
+                            </xsl:call-template>
+                        </xsl:with-param>
                     </xsl:call-template>
-                    <xsl:text>"</xsl:text>
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:if>
@@ -286,7 +298,10 @@
     <xsl:template match="@*" mode="normalAttr">
 
         <!-- JSON key -->
-        <xsl:text>"</xsl:text><xsl:value-of select="name()"/><xsl:text>" : </xsl:text>
+        <xsl:call-template name="json-string">
+            <xsl:with-param name="in" select="name()"/>
+        </xsl:call-template>
+        <xsl:text> : </xsl:text>
 
         <!-- JSON value, either string or non-string -->
         <xsl:choose>
@@ -294,7 +309,9 @@
                 <xsl:value-of select="."/>
             </xsl:when>
             <xsl:otherwise>
-               <xsl:text>"</xsl:text><xsl:value-of select="."/><xsl:text>"</xsl:text>
+                <xsl:call-template name="json-string">
+                    <xsl:with-param name="in" select="."/>
+                </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
 
@@ -311,25 +328,68 @@
         <xsl:param name="namespace"/>
         <xsl:param name="version"/>
         <xsl:param name="nonStringAttrs"/>
-        
-        <xsl:text>"</xsl:text><xsl:value-of select="name()"/><xsl:text>" : </xsl:text>
 
+        <!-- JSON key -->
+        <xsl:call-template name="json-string">
+            <xsl:with-param name="in" select="name()"/>
+        </xsl:call-template>
+        <xsl:text> : </xsl:text>
+
+        <!-- JSON value, either string or non-string -->
         <xsl:variable name="mypath">
             <xsl:call-template name="buildPathToProduct"/>
         </xsl:variable>
 
         <xsl:variable name="isNonString" as="xs:boolean">
-            <xsl:value-of select="cldfeeds:isNonStringProduct($mypath, $namespace, $version, $nonStringAttrs)"></xsl:value-of>
+            <xsl:value-of select="cldfeeds:isNonStringProduct($mypath, $namespace, $version, $nonStringAttrs)"/>
         </xsl:variable>
         <xsl:choose>
             <xsl:when test="$isNonString">
                 <xsl:value-of select="."/>    
             </xsl:when>
             <xsl:otherwise>
-                 <xsl:text>"</xsl:text><xsl:value-of select="."/><xsl:text>"</xsl:text>
+                <xsl:call-template name="json-string">
+                    <xsl:with-param name="in" select="."/>
+                </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
         <xsl:if test="position() &lt; last()">,</xsl:if>
+    </xsl:template>
+
+    <xsl:template name="json-string">
+        <xsl:param name="in"/>
+        <xsl:variable name="no-backslash">
+            <xsl:call-template name="escape-out">
+                <xsl:with-param name="in" select="$in"/>
+                <xsl:with-param name="char" select="'\'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="no-quote">
+            <xsl:call-template name="escape-out">
+                <xsl:with-param name="in" select="$no-backslash"/>
+                <xsl:with-param name="char" select="'&quot;'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="concat('&quot;',$no-quote,'&quot;')"/>
+    </xsl:template>
+
+    <xsl:template name="escape-out">
+        <xsl:param name="in" />
+        <xsl:param name="char"/>
+        <xsl:variable name="before" select="substring-before($in, $char)"/>
+        <xsl:variable name="after" select="substring-after($in, $char)"/>
+        <xsl:choose>
+            <xsl:when test="contains($in, $char)">
+                <xsl:value-of select="concat($before,'\',$char)"/>
+                <xsl:call-template name="escape-out">
+                    <xsl:with-param name="in" select="$after"/>
+                    <xsl:with-param name="char" select="$char"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="$in"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
     
     <!-- A template that removes line breaks from the value of TEXT node. 
