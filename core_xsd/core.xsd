@@ -493,6 +493,7 @@
                     For all other event types, datacenter & region are optional, and datacenter must match region if it is a non-GLOBAL value.
                 -->
                 <assert vc:minVersion="1.1" test="if (@dataCenter = ('DFW1','DFW2','DFW3')) then (@region = 'DFW') else
+                                                  if (@dataCenter = 'FRA1') then (@region = 'FRA') else
                                                   if (@dataCenter = 'HKG1') then (@region = 'HKG') else
                                                   if (@dataCenter = ('IAD1','IAD2','IAD3')) then (@region = 'IAD') else
                                                   if (@dataCenter = ('LON1','LON3','LON5')) then (@region = 'LON') else
@@ -693,6 +694,7 @@
         <restriction base="xsd:string">
             <enumeration value="GLOBAL"/>
             <enumeration value="DFW"/>
+            <enumeration value="FRA"/>
             <enumeration value="HKG"/>
             <enumeration value="IAD"/>
             <enumeration value="LON"/>
@@ -727,6 +729,7 @@
             <enumeration value="DFW1"/>
             <enumeration value="DFW2"/>
             <enumeration value="DFW3"/>
+            <enumeration value="FRA1"/>
             <enumeration value="HKG1"/>
             <enumeration value="IAD1"/>
             <enumeration value="IAD2"/>

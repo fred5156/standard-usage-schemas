@@ -398,6 +398,7 @@
         <restriction base="xsd:string">
             <enumeration value="GLOBAL"/>
             <enumeration value="DFW"/>
+            <enumeration value="FRA"/>
             <enumeration value="HKG"/>
             <enumeration value="IAD"/>
             <enumeration value="LON"/>
@@ -431,6 +432,7 @@
             <enumeration value="DFW1"/>
             <enumeration value="DFW2"/>
             <enumeration value="DFW3"/>
+            <enumeration value="FRA1"/>
             <enumeration value="HKG1"/>
             <enumeration value="IAD1"/>
             <enumeration value="IAD2"/>
