@@ -107,8 +107,8 @@ to re-generate the XSD 1.0 files. To do that, run the following:
 
 ```
 $ mvn clean generate-resources -P transform-xsd
-$ cp target/generated-resources/xml/xslt/core.xsd core_xsd/xsd10/_1.0Core.xsd
-$ cp target/generated-resources/xml/xslt/entry.xsd core_xsd/xsd10/entry.xsd
+$ cp target/generated-resources/core_xsd/xsd10/core.xsd core_xsd/xsd10/_1.0Core.xsd
+$ cp target/generated-resources/core_xsd/xsd10/entry.xsd core_xsd/xsd10/entry.xsd
 $ git diff 
 ```
 
